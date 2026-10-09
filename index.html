@@ -72,11 +72,12 @@
           showDiagnostic('Error en promesa de inicialización', details);
         }
       });
+      // Safety recovery only after 14s if network or device is completely stalled
       setTimeout(function() {
         if (!window.__app_mounted) {
-          showDiagnostic('Carga demorada detectada', 'La inicialización tomó más de 3.5 segundos. Haga clic abajo para restablecer la sesión.');
+          showDiagnostic('Conexión lenta detectada', 'La inicialización está tardando debido a la red. Si no carga en unos instantes, haga clic abajo para restablecer.');
         }
-      }, 3500);
+      }, 14000);
     </script>
 
     <script type="module" src="/src/main.tsx"></script>

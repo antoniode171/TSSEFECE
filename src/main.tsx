@@ -80,7 +80,7 @@ class RootErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState
 function mountApplication() {
   const container = document.getElementById('root');
   if (!container) {
-    console.error('Target #root container not found in DOM.');
+    setTimeout(mountApplication, 20);
     return;
   }
 
@@ -91,7 +91,7 @@ function mountApplication() {
         <App />
       </RootErrorBoundary>
     );
-    // Mark application as mounted to clear loader and diagnostic timers
+    // Mark application as mounted immediately
     try {
       (window as any).__app_mounted = true;
     } catch (_) {}
@@ -115,9 +115,5 @@ function mountApplication() {
   }
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', mountApplication);
-} else {
-  mountApplication();
-}
+mountApplication();
 
