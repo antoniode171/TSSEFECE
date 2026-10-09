@@ -1,6 +1,3 @@
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
-
 export interface ExportPdfOptions {
   onProgress?: (progress: number, message: string) => void;
   idPrefix?: string;
@@ -13,7 +10,15 @@ export async function exportSurveyToPdf(
   const { onProgress, idPrefix = 'export-' } = options || {};
 
   try {
-    onProgress?.(5, 'Iniciando generación de documento...');
+    onProgress?.(5, 'Cargando módulos de exportación...');
+
+    // Dynamic import to prevent heavy bundle execution on initial app boot
+    const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
+      import('jspdf'),
+      import('html2canvas'),
+    ]);
+
+    onProgress?.(12, 'Iniciando documento PDF...');
 
     const pdf = new jsPDF({
       orientation: 'portrait',

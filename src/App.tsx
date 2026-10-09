@@ -629,17 +629,19 @@ export default function App() {
       </div>
 
       {/* DEDICATED OFF-SCREEN SOURCE FOR HIGH-FIDELITY HTML2CANVAS PDF EXPORT */}
-      <div
-        id="pdf-export-source"
-        className="fixed top-0 left-0 -z-50 pointer-events-none opacity-100"
-        style={{
-          width: '210mm',
-          transform: 'none',
-        }}
-        aria-hidden="true"
-      >
-        <PdfReportDocument survey={currentSurvey} idPrefix="export-" />
-      </div>
+      {isExporting && (
+        <div
+          id="pdf-export-source"
+          className="fixed top-0 left-0 -z-50 pointer-events-none opacity-100"
+          style={{
+            width: '210mm',
+            transform: 'none',
+          }}
+          aria-hidden="true"
+        >
+          <PdfReportDocument survey={currentSurvey} idPrefix="export-" />
+        </div>
+      )}
 
       {/* DEDICATED PRINT CONTAINER: ACTIVE ONLY DURING @media print */}
       <div id="print-document-container" className="hidden print:block w-full">
