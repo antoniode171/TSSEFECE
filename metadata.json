@@ -1,0 +1,6 @@
+{
+  "name": "Site Survey Telecom Pro",
+  "description": "Dashboard integral de gestión e inspección de Site Survey telecomunicaciones con generación de reportes PDF oficiales y análisis de infraestructura.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
