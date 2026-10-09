@@ -105,7 +105,22 @@ export const SurveyEditor: React.FC<SurveyEditorProps> = ({
   onSave,
   onPreviewPdf,
 }) => {
-  const [formData, setFormData] = useState<SiteSurvey>({ ...survey });
+  const [formData, setFormData] = useState<SiteSurvey>(() => ({
+    ...survey,
+    breakers: Array.isArray(survey.breakers) ? survey.breakers : [],
+    fotosSitioPagina5: Array.isArray(survey.fotosSitioPagina5) ? survey.fotosSitioPagina5 : [],
+    fotosSitioPagina6: Array.isArray(survey.fotosSitioPagina6) ? survey.fotosSitioPagina6 : [],
+  }));
+
+  React.useEffect(() => {
+    setFormData({
+      ...survey,
+      breakers: Array.isArray(survey.breakers) ? survey.breakers : [],
+      fotosSitioPagina5: Array.isArray(survey.fotosSitioPagina5) ? survey.fotosSitioPagina5 : [],
+      fotosSitioPagina6: Array.isArray(survey.fotosSitioPagina6) ? survey.fotosSitioPagina6 : [],
+    });
+  }, [survey.id]);
+
   const [activeTab, setActiveTab] = useState<
     'general' | 'rack' | 'fuerza' | 'plano' | 'fotos'
   >('general');

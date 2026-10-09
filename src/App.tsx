@@ -27,13 +27,75 @@ import {
 
 const STORAGE_KEY = 'site_survey_telecom_data_v1';
 
+function sanitizeSurvey(raw: any, fallbackIndex = 0): SiteSurvey {
+  const base = initialSurveys[fallbackIndex % initialSurveys.length] || initialSurveys[0];
+  if (!raw || typeof raw !== 'object') return base;
+
+  return {
+    ...base,
+    ...raw,
+    id: raw.id || base.id,
+    codigoSitio: raw.codigoSitio || base.codigoSitio,
+    nombreSitio: raw.nombreSitio || base.nombreSitio,
+    nombreProyecto: raw.nombreProyecto || base.nombreProyecto,
+    estado: raw.estado || 'Borrador',
+    porcentajeCompletado:
+      typeof raw.porcentajeCompletado === 'number' ? raw.porcentajeCompletado : 50,
+    creadoPor: raw.creadoPor || 'Ingeniero de Campo',
+    ultimaActualizacion:
+      raw.ultimaActualizacion || new Date().toISOString().slice(0, 16).replace('T', ' '),
+    region: raw.region || base.region,
+    fechaReporte: raw.fechaReporte || base.fechaReporte,
+    tiposEquipos: raw.tiposEquipos || base.tiposEquipos,
+    tipoReporte: raw.tipoReporte || base.tipoReporte,
+    contratista: raw.contratista || base.contratista,
+    requiereLlave: raw.requiereLlave || 'SI',
+    dondeSeRetiraLlave: raw.dondeSeRetiraLlave || '',
+    propietarioSitio: raw.propietarioSitio || '',
+    coordenadasSitio: raw.coordenadasSitio || '',
+    observacionesPag1: raw.observacionesPag1 || '',
+    ubicacionRack: raw.ubicacionRack || '',
+    ubicacionGabinete: raw.ubicacionGabinete || '',
+    tipoRack: raw.tipoRack || '19"',
+    nombreOdf1: raw.nombreOdf1 || '',
+    nombreOdf2: raw.nombreOdf2 || '',
+    conectorOdf1Upc: raw.conectorOdf1Upc || '',
+    conectorOdf1Apc: raw.conectorOdf1Apc || '',
+    conectorOdf2Upc: raw.conectorOdf2Upc || '',
+    conectorOdf2Apc: raw.conectorOdf2Apc || '',
+    rectificadorA: raw.rectificadorA || '',
+    rectificadorB: raw.rectificadorB || '',
+    terminalesEnergiaDobleAgujero: raw.terminalesEnergiaDobleAgujero || '0',
+    terminalesEnergiaUnAgujero: raw.terminalesEnergiaUnAgujero || '0',
+    terminalesEnergiaPunta: raw.terminalesEnergiaPunta || '0',
+    breakers:
+      Array.isArray(raw.breakers) && raw.breakers.length > 0 ? raw.breakers : base.breakers,
+    terminalesTierraDobleAgujero: raw.terminalesTierraDobleAgujero || '0',
+    terminalesTierraUnAgujero: raw.terminalesTierraUnAgujero || '0',
+    calibreCableAterrizajeAwg: raw.calibreCableAterrizajeAwg || '',
+    recorridoCableAterrizajeMts: raw.recorridoCableAterrizajeMts || '',
+    observacionesFuerza: raw.observacionesFuerza || '',
+    planoSitioNotas: raw.planoSitioNotas || '',
+    fotosSitioPagina5:
+      Array.isArray(raw.fotosSitioPagina5) && raw.fotosSitioPagina5.length > 0
+        ? raw.fotosSitioPagina5
+        : base.fotosSitioPagina5,
+    fotosSitioPagina6:
+      Array.isArray(raw.fotosSitioPagina6) && raw.fotosSitioPagina6.length > 0
+        ? raw.fotosSitioPagina6
+        : base.fotosSitioPagina6,
+  };
+}
+
 export default function App() {
   const [surveys, setSurveys] = useState<SiteSurvey[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((item, idx) => sanitizeSurvey(item, idx));
+        }
       }
     } catch (e) {
       console.error('Error loading saved surveys:', e);

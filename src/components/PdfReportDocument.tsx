@@ -544,7 +544,10 @@ export const PdfReportDocument: React.FC<PdfReportDocumentProps> = ({
                     </tr>
                   </thead>
                   <tbody>
-                    {(survey.breakers.length > 0 ? survey.breakers : [1, 2, 3, 4]).map((brk, idx) => {
+                    {((Array.isArray(survey?.breakers) && survey.breakers.length > 0)
+                      ? survey.breakers
+                      : [1, 2, 3, 4]
+                    ).map((brk, idx) => {
                       const item = typeof brk === 'object' ? brk : null;
                       return (
                         <tr key={idx} className="border-b border-black text-center last:border-b-0 h-6">
@@ -859,7 +862,9 @@ export const PdfReportDocument: React.FC<PdfReportDocumentProps> = ({
 
             {/* 6 Photo Slots (2 columns x 3 rows) */}
             <div className="grid grid-cols-2 gap-2">
-              {survey.fotosSitioPagina5.slice(0, 6).map((photo, index) => (
+              {(Array.isArray(survey?.fotosSitioPagina5) ? survey.fotosSitioPagina5 : [])
+                .slice(0, 6)
+                .map((photo, index) => (
                 <div key={photo.id || index} className="border-2 border-black flex flex-col">
                   {/* Photo Title Bar */}
                   <div className="bg-[#00A3E0] py-0.5 px-1.5 font-bold text-[9px] border-b-2 border-black uppercase truncate">
@@ -909,7 +914,9 @@ export const PdfReportDocument: React.FC<PdfReportDocumentProps> = ({
 
             {/* 6 Photo Slots (2 columns x 3 rows) */}
             <div className="grid grid-cols-2 gap-2">
-              {survey.fotosSitioPagina6.slice(0, 6).map((photo, index) => (
+              {(Array.isArray(survey?.fotosSitioPagina6) ? survey.fotosSitioPagina6 : [])
+                .slice(0, 6)
+                .map((photo, index) => (
                 <div key={photo.id || index} className="border-2 border-black flex flex-col">
                   {/* Photo Title Bar */}
                   <div className="bg-[#00A3E0] py-0.5 px-1.5 font-bold text-[9px] border-b-2 border-black uppercase truncate">

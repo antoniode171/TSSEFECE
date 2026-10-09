@@ -47,11 +47,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   // Filtered surveys
   const filteredSurveys = surveys.filter((s) => {
+    const q = searchQuery.toLowerCase();
     const matchesSearch =
-      s.nombreSitio.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.codigoSitio.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.nombreProyecto.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.contratista.toLowerCase().includes(searchQuery.toLowerCase());
+      (s.nombreSitio || '').toLowerCase().includes(q) ||
+      (s.codigoSitio || '').toLowerCase().includes(q) ||
+      (s.nombreProyecto || '').toLowerCase().includes(q) ||
+      (s.contratista || '').toLowerCase().includes(q);
 
     const matchesStatus = statusFilter === 'Todos' || s.estado === statusFilter;
     return matchesSearch && matchesStatus;
@@ -63,9 +64,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const inReviewCount = surveys.filter((s) => s.estado === 'En Revisión').length;
   const draftCount = surveys.filter((s) => s.estado === 'Borrador').length;
 
-  const rack19Count = surveys.filter((s) => s.tipoRack.includes('19')).length;
-  const rack21Count = surveys.filter((s) => s.tipoRack.includes('21')).length;
-  const rack23Count = surveys.filter((s) => s.tipoRack.includes('23')).length;
+  const rack19Count = surveys.filter((s) => (s.tipoRack || '').includes('19')).length;
+  const rack21Count = surveys.filter((s) => (s.tipoRack || '').includes('21')).length;
+  const rack23Count = surveys.filter((s) => (s.tipoRack || '').includes('23')).length;
 
   return (
     <div className="space-y-6">
