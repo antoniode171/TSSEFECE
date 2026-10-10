@@ -78,6 +78,10 @@ class RootErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState
 }
 
 function mountApplication() {
+  try {
+    (window as any).__app_mounted = true;
+  } catch (_) {}
+
   const container = document.getElementById('root');
   if (!container) {
     setTimeout(mountApplication, 20);
@@ -91,22 +95,18 @@ function mountApplication() {
         <App />
       </RootErrorBoundary>
     );
-    // Mark application as mounted immediately
-    try {
-      (window as any).__app_mounted = true;
-    } catch (_) {}
   } catch (err: any) {
     console.error('Fatal initialization error mounting React app:', err);
     container.innerHTML = `
       <div style="min-height:100vh;background:#020617;color:#f8fafc;display:flex;align-items:center;justify-content:center;padding:24px;font-family:system-ui,-apple-system,sans-serif;text-align:center;">
-        <div style="max-width:420px;background:#0f172a;border:1px solid #334155;padding:24px;border-radius:16px;box-shadow:0 20px 25px -5px rgba(0,0,0,0.5);">
+        <div style="max-width:420px;background:#0f172a;border:1px solid #ef4444;padding:24px;border-radius:16px;box-shadow:0 20px 25px -5px rgba(0,0,0,0.5);">
           <div style="width:48px;height:48px;border-radius:12px;background:rgba(244,63,94,0.15);color:#f43f5e;font-size:24px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">⚠️</div>
           <h2 style="font-size:16px;font-weight:700;color:#f8fafc;margin:0 0 8px;">Error al inicializar la aplicación</h2>
-          <p style="font-size:12px;color:#94a3b8;margin:0 0 16px;line-height:1.5;">Se produjo un error inesperado al montar los componentes. Puede restablecer los datos locales para solucionar inconsistencias.</p>
-          <div style="padding:10px;background:#020617;border:1px solid #1e293b;border-radius:8px;font-family:monospace;font-size:11px;color:#fda4af;text-align:left;overflow-x:auto;margin-bottom:16px;">
+          <p style="font-size:12px;color:#94a3b8;margin:0 0 16px;line-height:1.5;">Se produjo un error al montar los componentes. Puede restablecer los datos locales para reiniciar el estado predeterminado.</p>
+          <div style="padding:10px;background:#020617;border:1px solid #1e293b;border-radius:8px;font-family:monospace;font-size:11px;color:#fda4af;text-align:left;overflow-x:auto;margin-bottom:16px;white-space:pre-wrap;">
             ${(err && (err.message || String(err))) || 'Error desconocido'}
           </div>
-          <button onclick="localStorage.removeItem('site_survey_telecom_data_v1');location.reload();" style="width:100%;padding:10px 16px;background:#0284c7;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;">
+          <button onclick="try{localStorage.removeItem('site_survey_telecom_data_v1');}catch(e){}location.reload();" style="width:100%;padding:10px 16px;background:#0284c7;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;">
             Restablecer datos locales y Recargar
           </button>
         </div>

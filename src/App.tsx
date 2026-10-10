@@ -109,6 +109,7 @@ export default function App() {
   const [currentView, setCurrentView] = useState<'dashboard' | 'editor' | 'preview' | 'assistant'>('dashboard');
   const [showPdfModal, setShowPdfModal] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [isPrinting, setIsPrinting] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Responsive PDF view state
@@ -284,9 +285,11 @@ export default function App() {
     if (surveyToPrint.id !== currentSurveyId) {
       setCurrentSurveyId(surveyToPrint.id);
     }
+    setIsPrinting(true);
     setTimeout(() => {
       printSurveyDocument();
-    }, 250);
+      setTimeout(() => setIsPrinting(false), 1500);
+    }, 200);
   };
 
   return (
@@ -643,10 +646,12 @@ export default function App() {
         </div>
       )}
 
-      {/* DEDICATED PRINT CONTAINER: ACTIVE ONLY DURING @media print */}
-      <div id="print-document-container" className="hidden print:block w-full">
-        <PdfReportDocument survey={currentSurvey} idPrefix="print-" />
-      </div>
+      {/* DEDICATED PRINT CONTAINER: ACTIVE ONLY DURING PRINT / EXPORT */}
+      {(isPrinting || isExporting) && (
+        <div id="print-document-container" className="hidden print:block w-full">
+          <PdfReportDocument survey={currentSurvey} idPrefix="print-" />
+        </div>
+      )}
     </>
   );
 }
