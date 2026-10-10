@@ -3,6 +3,7 @@ import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -12,17 +13,37 @@ dotenv.config();
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
+const HOST = process.env.HOST || '0.0.0.0';
 
-app.use(express.json());
+// Enable trust proxy for reverse proxies (Nginx, Traefik, Cloudflare, AWS ALB, GCP Cloud Run)
+app.set('trust proxy', 1);
 
-// Initialize GoogleGenAI server-side with User-Agent
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-  httpOptions: {
-    headers: {
-      'User-Agent': 'aistudio-build',
-    },
-  },
+app.use(express.json({ limit: '10mb' }));
+
+// CORS headers for universal cross-server compatibility
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
+
+// Health check endpoints for Docker, Kubernetes, AWS ECS, GCP Cloud Run, Render, Railway
+app.get('/health', (_req, res) => {
+  res.status(200).json({ status: 'healthy', uptime: process.uptime(), timestamp: new Date().toISOString() });
+});
+
+app.get('/api/health', (_req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    uptime: process.uptime(),
+    hasGeminiKey: Boolean(process.env.GEMINI_API_KEY),
+    nodeVersion: process.version,
+    platform: process.platform,
+  });
 });
 
 // Search Grounding endpoint for Telecom Field Data & Regulations
@@ -33,6 +54,22 @@ app.post('/api/telecom-search', async (req, res) => {
     if (!query) {
       return res.status(400).json({ error: 'Query is required' });
     }
+
+    if (!process.env.GEMINI_API_KEY) {
+      return res.json({
+        answer: '⚠️ **Aviso de Configuración del Servidor**: La variable `GEMINI_API_KEY` no está configurada en este servidor.\n\nPara activar las consultas en tiempo real con Google Search Grounding:\n1. Agregue `GEMINI_API_KEY=su_clave_aqui` a las variables de entorno o al archivo `.env`.\n2. Reinicie el servicio.\n\n*Nota: Todas las demás funciones de inspección, cálculo eléctrico, planos y exportación PDF funcionan de manera autónoma en su servidor.*',
+        grounding: { queries: [], sources: [] },
+      });
+    }
+
+    const ai = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        },
+      },
+    });
 
     const systemInstruction = `
 Eres un Ingeniero Consultor Senior en Telecomunicaciones de Nokia y Tigo experto en Site Surveys, despliegue de redes móviles (4G LTE, 5G NR sub-6GHz y mmWave), plantas de fuerza DC (-48V), sistemas de puesta a tierra (RETIE, IEEE 142), ODFs y tendidos de fibra óptica.
@@ -84,22 +121,50 @@ ${query}
 });
 
 async function startServer() {
-  if (process.env.NODE_ENV !== 'production') {
+  const distPath = path.resolve(__dirname, 'dist');
+  const distIndexExists = fs.existsSync(path.resolve(distPath, 'index.html'));
+
+  // In AI Studio dev mode, DISABLE_HMR is set to 'true'. When developing, use Vite middleware.
+  // In production builds (or when dist/ exists and not running dev mode), serve the compiled app directly.
+  const isAiStudioDev = process.env.DISABLE_HMR === 'true' && process.env.NODE_ENV !== 'production';
+
+  if (!isAiStudioDev && (process.env.NODE_ENV === 'production' || distIndexExists)) {
+    // Universal production static server
+    app.use(express.static(distPath, {
+      maxAge: '1h',
+      etag: true,
+    }));
+
+    app.get('*', (_req, res) => {
+      res.sendFile(path.resolve(distPath, 'index.html'));
+    });
+
+    console.log(`[Production Mode] Serving pre-compiled static assets from ${distPath}`);
+  } else {
+    // Development mode with Vite SPA middleware
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
     });
     app.use(vite.middlewares);
-  } else {
-    app.use(express.static(path.resolve(__dirname, 'dist')));
-    app.get('*', (_req, res) => {
-      res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
-    });
+    console.log(`[Development Mode] Vite SPA middleware mounted`);
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on http://0.0.0.0:${PORT}`);
+  const server = app.listen(PORT, HOST, () => {
+    console.log(`Site Survey Telecom Pro server running at http://${HOST}:${PORT}`);
   });
+
+  // Graceful shutdown handling for Docker, Kubernetes, PM2, systemd
+  const handleShutdown = (signal: string) => {
+    console.log(`${signal} received. Closing HTTP server gracefully...`);
+    server.close(() => {
+      console.log('HTTP server closed. Process exiting.');
+      process.exit(0);
+    });
+  };
+
+  process.on('SIGTERM', () => handleShutdown('SIGTERM'));
+  process.on('SIGINT', () => handleShutdown('SIGINT'));
 }
 
 startServer();
